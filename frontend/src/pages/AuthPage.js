@@ -52,42 +52,63 @@ export default function AuthPage() {
           toast.success("Account created successfully!");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          const msg = error?.message || "";
-          if (
-            msg.toLowerCase().includes("email not confirmed") ||
-            msg.toLowerCase().includes("not confirmed")
-          ) {
+        let signInData = null;
+        let signInError = null;
+        try {
+          const result = await supabase.auth.signInWithPassword({ email, password });
+          signInData = result.data;
+          signInError = result.error;
+        } catch (streamErr) {
+          // Supabase SDK throws when response body is read twice (email not confirmed)
+          signInError = {
+            message: "email_not_confirmed",
+          };
+        }
+
+        if (signInError) {
+          let msg = "";
+          try {
+            msg = String(signInError?.message || signInError?.code || "").toLowerCase();
+          } catch {
+            msg = "auth_error";
+          }
+
+          if (msg.includes("email not confirmed") || msg.includes("not confirmed") || msg.includes("email_not_confirmed")) {
             setError(
-              "Please confirm your email address before signing in. Check your inbox for a confirmation link, or disable email confirmation in your Supabase project settings (Authentication → Settings)."
+              "Email not yet confirmed. Please check your inbox for a confirmation link. Alternatively, go to your Supabase dashboard → Authentication → Settings and disable 'Email Confirmations'."
             );
-          } else if (
-            msg.toLowerCase().includes("invalid login") ||
-            msg.toLowerCase().includes("invalid credentials") ||
-            msg.toLowerCase().includes("wrong password")
-          ) {
+          } else if (msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("wrong") || msg.includes("invalid email or password")) {
             setError("Invalid email or password. Please try again.");
-          } else if (msg.includes("body stream") || msg.includes("json")) {
+          } else if (msg.includes("body stream") || msg.includes("json") || msg.includes("stream")) {
             setError(
-              "Sign in failed. If you just signed up, please confirm your email first, or disable email confirmation in Supabase settings."
+              "Email not yet confirmed. Please check your inbox or disable email confirmation in your Supabase settings."
             );
           } else {
-            setError(msg || "Sign in failed. Please check your credentials.");
+            setError(
+              (signInError?.message && !signInError.message.includes("body stream"))
+                ? signInError.message
+                : "Sign in failed. Please check your credentials and try again."
+            );
           }
         } else {
           toast.success("Welcome back!");
         }
       }
     } catch (err) {
-      const msg = err?.message || "";
-      if (msg.includes("body stream") || msg.includes("json")) {
-        setError(
-          "Authentication error. Please confirm your email if you just signed up, or disable email confirmation in your Supabase dashboard."
-        );
-      } else {
-        setError(msg || "Something went wrong. Please try again.");
+      let errorMsg = "Authentication failed. If you just signed up, please confirm your email first.";
+      try {
+        const rawMsg = String(err?.message || err?.toString() || "");
+        if (rawMsg.includes("body stream") || rawMsg.includes("json") || rawMsg.includes("stream")) {
+          errorMsg = "Email confirmation required. Check your inbox or disable email confirmation in your Supabase dashboard (Authentication → Settings).";
+        } else if (rawMsg.includes("not confirmed")) {
+          errorMsg = "Please confirm your email address before signing in.";
+        } else if (rawMsg.length > 0 && rawMsg.length < 200) {
+          errorMsg = rawMsg;
+        }
+      } catch {
+        // Ignore errors in error handler
       }
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
