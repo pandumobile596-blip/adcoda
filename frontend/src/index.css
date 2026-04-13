@@ -1,0 +1,386 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode fallbacks (app forces dark) */
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --card: 222 47% 7%;
+    --card-foreground: 213 31% 91%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 35% 12%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 223 31% 10%;
+    --muted-foreground: 215 20% 50%;
+    --accent: 257 70% 54%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 27% 15%;
+    --input: 222 30% 12%;
+    --ring: 243 75% 59%;
+    --radius: 0.625rem;
+    --success: 142 72% 42%;
+    --warning: 43 96% 56%;
+
+    /* Custom SwipeFlow tokens */
+    --surface-raised: 222 40% 9%;
+    --surface-overlay: 222 35% 12%;
+    --border-subtle: hsl(222 27% 15% / 0.6);
+    --border-strong: hsl(222 27% 22%);
+    --glow-primary: 0 0 30px hsl(243 75% 59% / 0.2);
+    --glow-strong: 0 0 60px hsl(243 75% 59% / 0.35);
+    --shadow-card: 0 4px 24px -4px hsl(224 71% 2% / 0.7);
+    --shadow-elevated: 0 8px 40px -8px hsl(224 71% 2% / 0.8);
+    --transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --card: 222 47% 7%;
+    --card-foreground: 213 31% 91%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 35% 12%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 223 31% 10%;
+    --muted-foreground: 215 20% 50%;
+    --accent: 257 70% 54%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 27% 15%;
+    --input: 222 30% 12%;
+    --ring: 243 75% 59%;
+    --success: 142 72% 42%;
+    --warning: 43 96% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+/* ============================================
+   SWIPEFLOW MASONRY GRID
+   ============================================ */
+.masonry-grid {
+  columns: 2;
+  column-gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .masonry-grid { columns: 3; }
+}
+
+@media (min-width: 1280px) {
+  .masonry-grid { columns: 4; }
+}
+
+@media (min-width: 1600px) {
+  .masonry-grid { columns: 5; }
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+/* ============================================
+   CARD ANIMATIONS
+   ============================================ */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 hsl(243 75% 59% / 0.4); }
+  70% { box-shadow: 0 0 0 10px hsl(243 75% 59% / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(243 75% 59% / 0); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes analysis-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.card-animate {
+  opacity: 0;
+  animation: card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(222 47% 7%) 25%,
+    hsl(222 35% 12%) 50%,
+    hsl(222 47% 7%) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+.animate-analysis-pulse {
+  animation: analysis-pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   FORMULA BADGE SYSTEM
+   ============================================ */
+.formula-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Formula-specific colors */
+.formula-aida   { background: hsl(243 75% 59% / 0.15); color: hsl(243 90% 78%); border-color: hsl(243 75% 59% / 0.30); }
+.formula-pas    { background: hsl(38 90% 60% / 0.15);  color: hsl(38 100% 72%);  border-color: hsl(38 90% 60% / 0.30); }
+.formula-bab    { background: hsl(142 72% 42% / 0.15); color: hsl(142 72% 65%); border-color: hsl(142 72% 42% / 0.30); }
+.formula-fab    { background: hsl(198 90% 55% / 0.15); color: hsl(198 90% 72%); border-color: hsl(198 90% 55% / 0.30); }
+.formula-pppp   { background: hsl(330 75% 65% / 0.15); color: hsl(330 80% 78%); border-color: hsl(330 75% 65% / 0.30); }
+.formula-4ps    { background: hsl(25 90% 55% / 0.15);  color: hsl(25 90% 72%);  border-color: hsl(25 90% 55% / 0.30); }
+.formula-other  { background: hsl(257 70% 54% / 0.15); color: hsl(257 80% 78%); border-color: hsl(257 70% 54% / 0.30); }
+
+/* ============================================
+   TAG CHIPS
+   ============================================ */
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  background: hsl(222 35% 12%);
+  color: hsl(215 20% 65%);
+  border: 1px solid hsl(222 27% 18%);
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(222 27% 20%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(222 27% 28%);
+}
+
+/* ============================================
+   DROP ZONE
+   ============================================ */
+.dropzone {
+  border: 2px dashed hsl(222 27% 20%);
+  border-radius: 12px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.dropzone:hover,
+.dropzone.drag-over {
+  border-color: hsl(243 75% 59%);
+  background: hsl(243 75% 59% / 0.04);
+}
+
+.dropzone.drag-over {
+  border-color: hsl(243 75% 59%);
+  background: hsl(243 75% 59% / 0.08);
+  box-shadow: 0 0 0 4px hsl(243 75% 59% / 0.1);
+}
+
+/* ============================================
+   SWIPE CARD HOVER EFFECT
+   ============================================ */
+.swipe-card {
+  border: 1px solid hsl(222 27% 15%);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.swipe-card:hover {
+  border-color: hsl(243 75% 59% / 0.4);
+  box-shadow: 0 8px 32px -8px hsl(224 71% 2% / 0.8), 0 0 0 1px hsl(243 75% 59% / 0.15);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   GLASS / FROSTED EFFECT
+   ============================================ */
+.glass {
+  background: hsl(222 47% 7% / 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ============================================
+   NAV ACTIVE LINK
+   ============================================ */
+.nav-link {
+  color: hsl(215 20% 50%);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.nav-link:hover {
+  color: hsl(213 31% 91%);
+  background: hsl(222 35% 12%);
+}
+
+.nav-link.active {
+  color: hsl(213 31% 91%);
+  background: hsl(222 35% 12%);
+}
+
+/* ============================================
+   AUTH GRID BACKGROUND
+   ============================================ */
+.auth-grid-bg {
+  background-image:
+    linear-gradient(hsl(222 27% 15% / 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(222 27% 15% / 0.4) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ============================================
+   GRADIENT TEXT (dark bg only - safe)
+   ============================================ */
+.gradient-text {
+  background: linear-gradient(135deg, hsl(213 31% 91%), hsl(215 20% 65%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-brand {
+  background: linear-gradient(135deg, hsl(243 90% 78%), hsl(257 80% 78%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   DEBUG WRAPPER FIX
+   ============================================ */
+@layer base {
+  [data-debug-wrapper="true"] {
+    display: contents !important;
+  }
+  [data-debug-wrapper="true"] > * {
+    margin-left: inherit;
+    margin-right: inherit;
+    margin-top: inherit;
+    margin-bottom: inherit;
+    padding-left: inherit;
+    padding-right: inherit;
+    padding-top: inherit;
+    padding-bottom: inherit;
+    column-gap: inherit;
+    row-gap: inherit;
+    gap: inherit;
+    border-left-width: inherit;
+    border-right-width: inherit;
+    border-top-width: inherit;
+    border-bottom-width: inherit;
+    border-left-style: inherit;
+    border-right-style: inherit;
+    border-top-style: inherit;
+    border-bottom-style: inherit;
+    border-left-color: inherit;
+    border-right-color: inherit;
+    border-top-color: inherit;
+    border-bottom-color: inherit;
+  }
+}
