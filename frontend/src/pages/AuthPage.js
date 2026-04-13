@@ -35,17 +35,59 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        setSuccessMsg("Account created! Check your email to confirm, or sign in if email confirmation is disabled.");
-        toast.success("Account created successfully!");
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          const msg = error?.message || "";
+          if (msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("already exists")) {
+            setError("An account with this email already exists. Please sign in instead.");
+          } else {
+            setError(msg || "Sign up failed. Please try again.");
+          }
+        } else {
+          setSuccessMsg(
+            data?.user?.identities?.length === 0
+              ? "An account with this email already exists. Please sign in."
+              : "Account created! If email confirmation is enabled in your Supabase project, check your inbox to confirm — or sign in directly if it's disabled."
+          );
+          toast.success("Account created successfully!");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Welcome back!");
+        if (error) {
+          const msg = error?.message || "";
+          if (
+            msg.toLowerCase().includes("email not confirmed") ||
+            msg.toLowerCase().includes("not confirmed")
+          ) {
+            setError(
+              "Please confirm your email address before signing in. Check your inbox for a confirmation link, or disable email confirmation in your Supabase project settings (Authentication → Settings)."
+            );
+          } else if (
+            msg.toLowerCase().includes("invalid login") ||
+            msg.toLowerCase().includes("invalid credentials") ||
+            msg.toLowerCase().includes("wrong password")
+          ) {
+            setError("Invalid email or password. Please try again.");
+          } else if (msg.includes("body stream") || msg.includes("json")) {
+            setError(
+              "Sign in failed. If you just signed up, please confirm your email first, or disable email confirmation in Supabase settings."
+            );
+          } else {
+            setError(msg || "Sign in failed. Please check your credentials.");
+          }
+        } else {
+          toast.success("Welcome back!");
+        }
       }
     } catch (err) {
-      setError(err.message || "Something went wrong. Please try again.");
+      const msg = err?.message || "";
+      if (msg.includes("body stream") || msg.includes("json")) {
+        setError(
+          "Authentication error. Please confirm your email if you just signed up, or disable email confirmation in your Supabase dashboard."
+        );
+      } else {
+        setError(msg || "Something went wrong. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -152,6 +194,21 @@ export default function AuthPage() {
                 ? "Start building your swipe file today"
                 : "Sign in to access your swipe library"}
             </p>
+          </div>
+
+          {/* Dev tip */}
+          <div className="mb-4 p-3 rounded-lg bg-secondary border border-border text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">💡 Supabase tip:</span>{" "}
+            Disable email confirmation in your{" "}
+            <a
+              href="https://supabase.com/dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Supabase dashboard
+            </a>{" "}
+            (Authentication → Settings → Disable email confirmations) for instant access.
           </div>
 
           {/* Error */}

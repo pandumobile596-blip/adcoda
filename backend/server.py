@@ -52,33 +52,26 @@ async def root():
 async def analyze_image(request: ImageAnalysisRequest):
     """Analyze an image using Google Gemini 2.5 Flash for marketing analysis."""
     try:
-        import google.generativeai as genai
+        from google import genai as google_genai
+        from google.genai import types as genai_types
 
         gemini_api_key = os.environ.get('GEMINI_API_KEY')
         if not gemini_api_key:
             raise HTTPException(status_code=500, detail="Gemini API key not configured")
 
-        genai.configure(api_key=gemini_api_key)
-
         # Download image from public URL
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             response = await client.get(request.image_url)
             if response.status_code != 200:
                 raise HTTPException(status_code=400, detail="Failed to download image from storage")
             image_bytes = response.content
             content_type = response.headers.get('content-type', 'image/jpeg')
 
-        # Clean content type (remove charset etc.)
+        # Clean content type
         if ';' in content_type:
             content_type = content_type.split(';')[0].strip()
-        # Fallback to jpeg if not a recognized image type
         if content_type not in ['image/jpeg', 'image/png', 'image/webp', 'image/gif']:
             content_type = 'image/jpeg'
-
-        # Encode to base64
-        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-
-        model = genai.GenerativeModel('gemini-2.5-flash')
 
         prompt = """You are a marketing analyst. Analyze this marketing/advertising image and extract the following information.
 Return ONLY a valid JSON object with exactly these fields (no markdown, no extra text):
@@ -90,13 +83,35 @@ Return ONLY a valid JSON object with exactly these fields (no markdown, no extra
   "category": "Content type (e.g., Social Ad, Email Newsletter, Landing Page, Banner Ad, Print Ad, Video Script, Sales Page)"
 }"""
 
-        response = model.generate_content([
-            {"inline_data": {"mime_type": content_type, "data": image_base64}},
-            prompt
-        ])
+        # Use new google-genai SDK with model fallback
+        genai_client = google_genai.Client(api_key=gemini_api_key)
+        
+        # Try models in order of preference
+        models_to_try = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash']
+        response_obj = None
+        last_error = None
+        
+        for model_name in models_to_try:
+            try:
+                response_obj = genai_client.models.generate_content(
+                    model=model_name,
+                    contents=[
+                        genai_types.Part.from_bytes(data=image_bytes, mime_type=content_type),
+                        prompt
+                    ]
+                )
+                logger.info(f"Using model: {model_name}")
+                break
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Model {model_name} failed: {str(e)[:100]}, trying next...")
+                continue
+        
+        if response_obj is None:
+            raise last_error
 
         # Parse JSON response - handle markdown code blocks
-        response_text = response.text.strip()
+        response_text = response_obj.text.strip()
         if '```' in response_text:
             parts = response_text.split('```')
             for part in parts:
@@ -106,7 +121,7 @@ Return ONLY a valid JSON object with exactly these fields (no markdown, no extra
                 if part.startswith('{'):
                     response_text = part
                     break
-        
+
         result = json.loads(response_text)
         logger.info(f"Gemini analysis complete: formula={result.get('marketing_formula')}")
         return result

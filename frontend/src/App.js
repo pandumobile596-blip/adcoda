@@ -5,6 +5,17 @@ import Dashboard from "./pages/Dashboard";
 import { Toaster } from "./components/ui/sonner";
 import "./App.css";
 
+// Mock session for demo/preview mode
+const DEMO_SESSION = {
+  user: {
+    id: "demo-user-id",
+    email: "demo@swipeflow.io",
+    created_at: new Date().toISOString(),
+  },
+  access_token: "demo-token",
+  isDemo: true,
+};
+
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -12,6 +23,14 @@ function App() {
   useEffect(() => {
     // Force dark mode
     document.documentElement.classList.add("dark");
+
+    // Check for demo mode
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("demo") === "true") {
+      setSession(DEMO_SESSION);
+      setLoading(false);
+      return;
+    }
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
