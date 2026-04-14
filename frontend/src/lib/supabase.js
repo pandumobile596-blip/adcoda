@@ -58,12 +58,13 @@ const safeFetch = async (input, init) => {
     },
 
     async json() {
+      if (!cachedText || !cachedText.trim()) return {};
       try {
         return JSON.parse(cachedText);
       } catch {
-        throw new SyntaxError(
-          `safeFetch: failed to parse JSON – body was: ${cachedText.slice(0, 120)}`
-        );
+        // Supabase occasionally returns non-JSON on auth errors (HTML error pages, etc.)
+        // Return empty object — the SDK falls back to the HTTP status for error info.
+        return {};
       }
     },
 

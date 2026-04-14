@@ -107,14 +107,19 @@ export default function AuthPage() {
         }
       }
     } catch (err) {
-      // Catch any unexpected SDK-level throws (e.g. network errors)
-      const raw = String(err?.message || err || "");
-      if (raw.includes("body stream") || raw.includes("json") || raw.includes("stream")) {
+      // Catch unexpected SDK-level throws (network errors, parse errors, etc.)
+      const raw = String(err?.message || err || "").toLowerCase();
+      if (raw.includes("body stream") || raw.includes("stream already")) {
         setError(
-          "A browser error occurred reading the auth response. Please hard-refresh (Ctrl+Shift+R) and try again."
+          "A browser error occurred reading the auth response. Please hard-refresh (Ctrl+Shift+R / Cmd+Shift+R) and try again."
         );
-      } else if (raw) {
-        setError(raw);
+      } else if (raw.includes("failed to parse") || raw.includes("safefetch") || raw.includes("syntax")) {
+        // safeFetch couldn't parse the response — treat as wrong credentials
+        setError("Invalid email or password. Please check your credentials and try again.");
+      } else if (raw.includes("fetch") || raw.includes("network") || raw.includes("failed")) {
+        setError("Network error. Please check your connection and try again.");
+      } else if (raw.length > 0 && raw.length < 300) {
+        setError(err?.message || "An unexpected error occurred. Please try again.");
       } else {
         setError("An unexpected error occurred. Please try again.");
       }
