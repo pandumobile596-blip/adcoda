@@ -58,7 +58,7 @@ export default function AuthPage() {
 
         // Email confirmation is disabled → user is auto-confirmed and logged in
         if (data?.session) {
-          toast.success("Account created! Welcome to SwipeFlow.");
+          toast.success("Account created! Welcome to AdCoda.");
         } else {
           setSuccessMsg(
             "Account created! Check your email for a confirmation link, then sign in."
@@ -157,7 +157,7 @@ export default function AuthPage() {
               <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-lg font-display font-semibold text-foreground tracking-tight">
-              SwipeFlow
+              AdCoda
             </span>
           </div>
 
@@ -216,7 +216,7 @@ export default function AuthPage() {
               <Zap className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="text-base font-display font-semibold text-foreground">
-              SwipeFlow
+              AdCoda
             </span>
           </div>
 

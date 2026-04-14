@@ -36,7 +36,7 @@ export const Navbar = ({ session, uploadCount, isPro, onUpload, onUpgrade }) => 
             <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
           <span className="text-sm font-display font-semibold text-foreground tracking-tight">
-            SwipeFlow
+            AdCoda
           </span>
         </div>
 

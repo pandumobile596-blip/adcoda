@@ -14,9 +14,6 @@ import {
   Layers,
   Brain,
   Building2,
-  AlertTriangle,
-  ExternalLink,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -92,70 +89,7 @@ const MOCK_SWIPES = [
     category: "Email Newsletter",
     extracted_text: "Overwhelmed? Anxiety keeping you up? Headspace guided meditations. Try free 30 days.",
     created_at: new Date(Date.now() - 86400000 * 18).toISOString(),
-  },
 ];
-
-const SQL_SETUP = `-- ================================================================
--- SWIPEFLOW COMPLETE DATABASE SETUP
--- Run this in: Supabase Dashboard → SQL Editor → New query → Run
--- ================================================================
-
--- 1. CREATE THE SWIPES TABLE
-CREATE TABLE IF NOT EXISTS public.swipes (
-  id                UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id           UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  image_url         TEXT        NOT NULL,
-  file_path         TEXT,
-  extracted_text    TEXT,
-  marketing_formula TEXT,
-  industry          TEXT,
-  emotional_hook    TEXT,
-  category          TEXT,
-  title             TEXT,
-  created_at        TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 2. ENABLE ROW LEVEL SECURITY
-ALTER TABLE public.swipes ENABLE ROW LEVEL SECURITY;
-
--- 3. RLS POLICIES — each user only accesses their own rows
-CREATE POLICY "Users can view their own swipes"
-  ON public.swipes FOR SELECT
-  TO authenticated
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own swipes"
-  ON public.swipes FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own swipes"
-  ON public.swipes FOR DELETE
-  TO authenticated
-  USING (auth.uid() = user_id);
-
--- 4. STORAGE POLICIES for the 'swipes' bucket
---    (create the bucket first: Storage → New bucket → name: swipes → Public)
-CREATE POLICY "Authenticated users can upload to own folder"
-  ON storage.objects FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    bucket_id = 'swipes'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-CREATE POLICY "Users can delete their own storage files"
-  ON storage.objects FOR DELETE
-  TO authenticated
-  USING (
-    bucket_id = 'swipes'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-CREATE POLICY "Public read access for swipes bucket"
-  ON storage.objects FOR SELECT
-  TO public
-  USING (bucket_id = 'swipes');`;
 
 const StatCard = ({ icon: Icon, label, value, accent }) => (
   <div className="p-4 rounded-xl border border-border bg-card flex items-center gap-3">
@@ -199,75 +133,6 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-const SetupBanner = ({ onDismiss }) => {
-  const [copied, setCopied] = useState(false);
-
-  const copy = () => {
-    navigator.clipboard.writeText(SQL_SETUP);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-    toast.success("SQL copied to clipboard!");
-  };
-
-  return (
-    <div className="mb-6 p-4 rounded-xl border border-warning/20 bg-warning/5">
-      <div className="flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground mb-1">
-            One-time Supabase setup required
-          </p>
-
-          {/* Steps */}
-          <ol className="text-xs text-muted-foreground space-y-1 mb-3 list-decimal list-inside">
-            <li>
-              Go to your{" "}
-              <a
-                href="https://supabase.com/dashboard"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline inline-flex items-center gap-0.5"
-              >
-                Supabase dashboard
-                <ExternalLink className="w-3 h-3" />
-              </a>
-              {" "}→ <strong className="text-foreground">Storage</strong> → create a bucket named{" "}
-              <code className="bg-secondary px-1 py-0.5 rounded text-foreground">swipes</code>{" "}
-              and set it to <strong className="text-foreground">Public</strong>.
-            </li>
-            <li>
-              Go to <strong className="text-foreground">SQL Editor</strong> → paste and run the script below.
-            </li>
-            <li>Refresh this page — uploads will work immediately.</li>
-          </ol>
-
-          <pre className="text-xs bg-secondary border border-border rounded-lg p-3 overflow-x-auto text-muted-foreground whitespace-pre-wrap break-all max-h-52">
-            {SQL_SETUP}
-          </pre>
-
-          <div className="flex gap-2 mt-3">
-            <Button
-              size="sm"
-              onClick={copy}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs h-7"
-            >
-              {copied ? "✓ Copied!" : "Copy SQL"}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onDismiss}
-              className="border-border text-muted-foreground hover:text-foreground text-xs h-7"
-            >
-              Dismiss
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function Dashboard({ session }) {
   const isDemoMode = session?.isDemo === true;
   const [swipes, setSwipes] = useState([]);
@@ -278,7 +143,6 @@ export default function Dashboard({ session }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedFormula, setSelectedFormula] = useState("All Formulas");
   const [sortOrder, setSortOrder] = useState("newest");
-  const [tableMissing, setTableMissing] = useState(false);
   const [isPro] = useState(false); // Pro status — extend later with Stripe
 
   const fetchSwipes = useCallback(async () => {
@@ -300,19 +164,11 @@ export default function Dashboard({ session }) {
         .order("created_at", { ascending: sortOrder === "oldest" });
 
       if (error) {
-        if (
-          error.code === "42P01" ||
-          error.message?.includes("does not exist")
-        ) {
-          setTableMissing(true);
-        } else {
-          toast.error(`Failed to load swipes: ${error.message}`);
-        }
+        toast.error(`Failed to load swipes: ${error.message}`);
         setSwipes([]);
         return;
       }
 
-      setTableMissing(false);
       setSwipes(data || []);
     } catch (err) {
       toast.error("Connection error. Please try again.");
@@ -439,7 +295,7 @@ export default function Dashboard({ session }) {
           <div className="mb-6 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               <span className="font-semibold text-primary">Preview mode</span>{" "}
-              — You're viewing SwipeFlow with demo data. Sign up to start your real swipe library.
+              — You're viewing AdCoda with demo data. Sign up to start your real swipe library.
             </p>
             <a href="/" className="text-xs font-medium text-primary hover:underline flex-shrink-0">
               Sign up free →
@@ -447,19 +303,15 @@ export default function Dashboard({ session }) {
           </div>
         )}
 
-        {/* Setup banner */}
-        {tableMissing && (
-          <SetupBanner onDismiss={() => setTableMissing(false)} />
-        )}
+        {/* Setup banner - removed as user has already run SQL */}
 
         {/* Pro upgrade banner */}
-        {!isPro && !tableMissing && swipes.length > 0 && (
+        {!isPro && swipes.length > 0 && (
           <ProUpgradeBanner uploadCount={uploadCount} />
         )}
 
         {/* Stats row */}
-        {!tableMissing && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 fade-in">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 fade-in">
             <StatCard
               icon={Layers}
               label="Total Swipes"
@@ -483,10 +335,9 @@ export default function Dashboard({ session }) {
               accent={!isPro && freeLeft <= 3}
             />
           </div>
-        )}
 
         {/* Search + filters */}
-        {!tableMissing && swipes.length > 0 && (
+        {swipes.length > 0 && (
           <SearchFilters
             searchTerm={searchTerm}
             onSearch={setSearchTerm}
@@ -503,28 +354,6 @@ export default function Dashboard({ session }) {
         {/* Content area */}
         {isLoading ? (
           <LoadingSkeleton />
-        ) : tableMissing ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-secondary border border-border flex items-center justify-center mb-4">
-              <AlertTriangle className="w-6 h-6 text-warning" />
-            </div>
-            <h3 className="text-base font-display font-semibold text-foreground mb-2">
-              Database not configured
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-xs mb-4">
-              Follow the setup instructions above to create your swipes table,
-              then refresh.
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={fetchSwipes}
-              className="border-border text-muted-foreground hover:text-foreground gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Try again
-            </Button>
-          </div>
         ) : filteredSwipes.length === 0 ? (
           <EmptyState
             onUpload={() => setShowUpload(true)}

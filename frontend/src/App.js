@@ -9,7 +9,7 @@ import "./App.css";
 const DEMO_SESSION = {
   user: {
     id: "demo-user-id",
-    email: "demo@swipeflow.io",
+    email: "demo@adcoda.io",
     created_at: new Date().toISOString(),
   },
   access_token: "demo-token",
@@ -57,7 +57,7 @@ function App() {
             <div className="absolute inset-0 border-2 border-transparent border-t-primary rounded-full animate-spin" />
           </div>
           <p className="text-sm text-muted-foreground font-display font-medium tracking-wide">
-            Loading SwipeFlow...
+            Loading AdCoda...
           </p>
         </div>
       </div>
