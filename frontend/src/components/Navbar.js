@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { Zap, Upload, LogOut, User, Crown, ChevronDown } from "lucide-react";
+import { Zap, Upload, LogOut, User, Crown, ChevronDown, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 export const Navbar = ({ session, uploadCount, isPro, onUpload, onUpgrade }) => {
@@ -120,8 +120,8 @@ export const Navbar = ({ session, uploadCount, isPro, onUpload, onUpgrade }) => 
                   onClick={onUpgrade}
                   className="text-sm text-primary cursor-pointer focus:bg-primary/10"
                 >
-                  <Crown className="w-4 h-4 mr-2" />
-                  Upgrade to Pro
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Critique & Suggestion
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator className="bg-border" />
