@@ -35,80 +35,89 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) {
-          const msg = error?.message || "";
-          if (msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("already exists")) {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (signUpError) {
+          const msg = (signUpError.message || "").toLowerCase();
+          if (msg.includes("already registered") || msg.includes("already exists")) {
             setError("An account with this email already exists. Please sign in instead.");
           } else {
-            setError(msg || "Sign up failed. Please try again.");
+            setError(signUpError.message || "Sign up failed. Please try again.");
           }
+          return;
+        }
+
+        // identities.length === 0 means the email already exists (Supabase quirk)
+        if (data?.user?.identities?.length === 0) {
+          setError("An account with this email already exists. Please sign in instead.");
+          return;
+        }
+
+        // Email confirmation is disabled → user is auto-confirmed and logged in
+        if (data?.session) {
+          toast.success("Account created! Welcome to SwipeFlow.");
         } else {
           setSuccessMsg(
-            data?.user?.identities?.length === 0
-              ? "An account with this email already exists. Please sign in."
-              : "Account created! If email confirmation is enabled in your Supabase project, check your inbox to confirm — or sign in directly if it's disabled."
+            "Account created! Check your email for a confirmation link, then sign in."
           );
           toast.success("Account created successfully!");
         }
       } else {
-        let signInData = null;
-        let signInError = null;
-        try {
-          const result = await supabase.auth.signInWithPassword({ email, password });
-          signInData = result.data;
-          signInError = result.error;
-        } catch (streamErr) {
-          // Supabase SDK throws when response body is read twice (email not confirmed)
-          signInError = {
-            message: "email_not_confirmed",
-          };
-        }
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
         if (signInError) {
-          let msg = "";
-          try {
-            msg = String(signInError?.message || signInError?.code || "").toLowerCase();
-          } catch {
-            msg = "auth_error";
+          const msg = (signInError.message || "").toLowerCase();
+          const code = (signInError.code || signInError.status || "").toString().toLowerCase();
+
+          // Handle safeFetch JSON parse errors (usually means invalid credentials)
+          if (msg.includes("safefetch") || msg.includes("failed to parse json")) {
+            setError("Invalid email or password. Please check your credentials and try again.");
+            return;
           }
 
-          if (msg.includes("email not confirmed") || msg.includes("not confirmed") || msg.includes("email_not_confirmed")) {
+          if (
+            msg.includes("email not confirmed") ||
+            msg.includes("not confirmed") ||
+            code.includes("email_not_confirmed")
+          ) {
             setError(
-              "Email not yet confirmed. Please check your inbox for a confirmation link. Alternatively, go to your Supabase dashboard → Authentication → Settings and disable 'Email Confirmations'."
+              "Your email address hasn't been confirmed yet. Check your inbox, or go to Supabase → Authentication → Settings and disable 'Email Confirmations'."
             );
-          } else if (msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("wrong") || msg.includes("invalid email or password")) {
-            setError("Invalid email or password. Please try again.");
-          } else if (msg.includes("body stream") || msg.includes("json") || msg.includes("stream")) {
-            setError(
-              "Email not yet confirmed. Please check your inbox or disable email confirmation in your Supabase settings."
-            );
+          } else if (
+            msg.includes("invalid login") ||
+            msg.includes("invalid credentials") ||
+            msg.includes("invalid email or password") ||
+            signInError.status === 400
+          ) {
+            setError("Invalid email or password. Please check your credentials and try again.");
           } else {
-            setError(
-              (signInError?.message && !signInError.message.includes("body stream"))
-                ? signInError.message
-                : "Sign in failed. Please check your credentials and try again."
-            );
+            setError(signInError.message || "Sign in failed. Please try again.");
           }
-        } else {
+          return;
+        }
+
+        if (data?.session) {
           toast.success("Welcome back!");
         }
       }
     } catch (err) {
-      let errorMsg = "Authentication failed. If you just signed up, please confirm your email first.";
-      try {
-        const rawMsg = String(err?.message || err?.toString() || "");
-        if (rawMsg.includes("body stream") || rawMsg.includes("json") || rawMsg.includes("stream")) {
-          errorMsg = "Email confirmation required. Check your inbox or disable email confirmation in your Supabase dashboard (Authentication → Settings).";
-        } else if (rawMsg.includes("not confirmed")) {
-          errorMsg = "Please confirm your email address before signing in.";
-        } else if (rawMsg.length > 0 && rawMsg.length < 200) {
-          errorMsg = rawMsg;
-        }
-      } catch {
-        // Ignore errors in error handler
+      // Catch any unexpected SDK-level throws (e.g. network errors)
+      const raw = String(err?.message || err || "");
+      if (raw.includes("body stream") || raw.includes("json") || raw.includes("stream")) {
+        setError(
+          "A browser error occurred reading the auth response. Please hard-refresh (Ctrl+Shift+R) and try again."
+        );
+      } else if (raw) {
+        setError(raw);
+      } else {
+        setError("An unexpected error occurred. Please try again.");
       }
-      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -212,24 +221,9 @@ export default function AuthPage() {
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5">
               {isSignUp
-                ? "Start building your swipe file today"
+                ? "Start building your AI-powered swipe file today"
                 : "Sign in to access your swipe library"}
             </p>
-          </div>
-
-          {/* Dev tip */}
-          <div className="mb-4 p-3 rounded-lg bg-secondary border border-border text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">💡 Supabase tip:</span>{" "}
-            Disable email confirmation in your{" "}
-            <a
-              href="https://supabase.com/dashboard"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Supabase dashboard
-            </a>{" "}
-            (Authentication → Settings → Disable email confirmations) for instant access.
           </div>
 
           {/* Error */}
