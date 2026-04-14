@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { supabase } from "./lib/supabase";
-import AuthPage from "./pages/AuthPage";
-import Dashboard from "./pages/Dashboard";
+import { supabase } from "./lib/supabase.jsx";
+import AuthPage from "./pages/AuthPage.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 import { Toaster } from "./components/ui/sonner";
 import "./App.css";
 

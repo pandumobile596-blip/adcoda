@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "../lib/supabase";
-import { Navbar } from "../components/Navbar";
-import { UploadModal } from "../components/UploadModal";
-import { MasonryGrid } from "../components/MasonryGrid";
-import { SearchFilters } from "../components/SearchFilters";
-import { EmptyState } from "../components/EmptyState";
-import { ProUpgradeBanner } from "../components/ProUpgradeBanner";
-import { SwipeDetailModal } from "../components/SwipeDetailModal";
+import { supabase } from "../lib/supabase.jsx";
+import { Navbar } from "../components/Navbar.jsx";
+import { UploadModal } from "../components/UploadModal.jsx";
+import { MasonryGrid } from "../components/MasonryGrid.jsx";
+import { SearchFilters } from "../components/SearchFilters.jsx";
+import { EmptyState } from "../components/EmptyState.jsx";
+import { ProUpgradeBanner } from "../components/ProUpgradeBanner.jsx";
+import { SwipeDetailModal } from "../components/SwipeDetailModal.jsx";
 import { Skeleton } from "../components/ui/skeleton";
 import { Button } from "../components/ui/button";
 import {
@@ -89,6 +89,7 @@ const MOCK_SWIPES = [
     category: "Email Newsletter",
     extracted_text: "Overwhelmed? Anxiety keeping you up? Headspace guided meditations. Try free 30 days.",
     created_at: new Date(Date.now() - 86400000 * 18).toISOString(),
+  },
 ];
 
 const StatCard = ({ icon: Icon, label, value, accent }) => (
