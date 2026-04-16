@@ -147,16 +147,16 @@ Vercel is built for React apps and offers seamless deployment.
 1. **Sign up at [vercel.com](https://vercel.com)**
 2. **Import your Git repository**
 3. **Configure the project**:
-   - **Framework Preset**: `Vite`
+   - **Framework Preset**: `Create React App`
    - **Root Directory**: `frontend`
-   - **Build Command**: `yarn build`
+   - **Build Command**: `npm run build`
    - **Output Directory**: `build`
 
 4. **Set Environment Variables** in Vercel dashboard:
    ```
-   VITE_BACKEND_URL=https://your-backend-url.railway.app
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+   REACT_APP_BACKEND_URL=https://your-backend-url.railway.app
+   REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+   REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
    ```
 
 5. **Deploy** and Vercel will give you a live URL (e.g., `https://adcoda.vercel.app`)
@@ -173,16 +173,16 @@ Netlify is another excellent choice for frontend hosting.
 2. **New site from Git** → Connect your repository
 3. **Configure build settings**:
    - **Base directory**: `frontend`
-   - **Build command**: `yarn build`
+   - **Build command**: `npm run build`
    - **Publish directory**: `frontend/build`
 
 4. **Environment Variables**:
    - Go to **Site settings** → **Environment variables**
    - Add:
      ```
-     VITE_BACKEND_URL=https://your-backend-url.railway.app
-     VITE_SUPABASE_URL=https://your-project.supabase.co
-     VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+     REACT_APP_BACKEND_URL=https://your-backend-url.railway.app
+     REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+     REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
      ```
 
 5. **Deploy** and get your live URL
@@ -201,9 +201,9 @@ Netlify is another excellent choice for frontend hosting.
 
 4. **Environment Variables**:
    ```
-   VITE_BACKEND_URL=https://your-backend-url.railway.app
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+   REACT_APP_BACKEND_URL=https://your-backend-url.railway.app
+   REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+   REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
    ```
 
 5. **Deploy**
@@ -215,9 +215,9 @@ Netlify is another excellent choice for frontend hosting.
 ### Frontend (`.env` in `frontend/` directory)
 
 ```bash
-VITE_BACKEND_URL=https://your-backend-url.com
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+REACT_APP_BACKEND_URL=https://your-backend-url.com
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
 ### Backend (`.env` in `backend/` directory)
@@ -265,7 +265,7 @@ app.add_middleware(
 
 ### Issue: "Supabase credentials missing"
 
-**Solution**: Double-check that `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in your frontend hosting platform's environment variables.
+**Solution**: Double-check that `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_ANON_KEY` are set in your frontend hosting platform's environment variables.
 
 ---
 

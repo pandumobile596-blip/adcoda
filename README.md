@@ -18,7 +18,7 @@
 
 ### Frontend
 - **React 19** - Modern UI library
-- **Vite** - Lightning-fast build tool
+- **Create React App** - Zero-config build tooling
 - **Tailwind CSS** - Utility-first styling
 - **shadcn/ui** - High-quality React components
 - **Supabase JS Client** - Database and auth integration
@@ -59,9 +59,9 @@ Edit `.env` and fill in your credentials:
 
 ```bash
 # Frontend
-VITE_BACKEND_URL=http://localhost:8001
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+REACT_APP_BACKEND_URL=http://localhost:8001
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
 
 # Backend
 GOOGLE_API_KEY=your-google-gemini-api-key
@@ -199,14 +199,15 @@ This will load the app with sample data for exploration.
 
 ```
 adcoda/
-├── frontend/               # React + Vite frontend
+├── frontend/               # React + CRA frontend
 │   ├── src/
 │   │   ├── components/    # Reusable UI components
 │   │   ├── pages/         # Main pages (Auth, Dashboard)
 │   │   ├── lib/           # Supabase client
 │   │   └── App.js         # Root component
 │   ├── package.json
-│   └── vite.config.js
+│   └── public/
+│       └── index.html
 │
 ├── backend/               # FastAPI backend
 │   ├── server.py          # Main API server
