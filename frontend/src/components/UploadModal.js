@@ -193,9 +193,29 @@ export const UploadModal = ({ open, onClose, session, onUploadComplete, uploadCo
 
       let analysisResult = null;
       try {
-        analysisResult = await analyzeMarketingImage(publicUrl);
+        const raw = await analyzeMarketingImage(publicUrl);
+        // Normalise to both old + new field names so the rest of the app works
+        analysisResult = {
+          // Legacy fields (used by DB columns)
+          extracted_text: raw.extracted_text || "",
+          marketing_formula: raw.formula_name || "Unknown",
+          industry: raw.industry || "Unknown",
+          emotional_hook: raw.primary_emotion || "Unknown",
+          category: raw.category || "Other",
+          // New rich fields
+          hook: raw.hook || "",
+          primary_emotion: raw.primary_emotion || "",
+          target_audience: raw.target_audience || "",
+          marketing_objective: raw.marketing_objective || "",
+          formula_name: raw.formula_name || "",
+          formula_explanation: raw.formula_explanation || "",
+          why_it_works: raw.why_it_works || "",
+          weakness: raw.weakness || "",
+          how_to_adapt: raw.how_to_adapt || "",
+          final_summary: raw.final_summary || "",
+        };
       } catch (err) {
-        console.warn("AI analysis failed, using defaults:", err.message);
+        console.warn("AI analysis failed:", err.message);
         analysisResult = {
           extracted_text: "AI analysis unavailable",
           marketing_formula: "Unknown",
@@ -207,7 +227,6 @@ export const UploadModal = ({ open, onClose, session, onUploadComplete, uploadCo
         clearInterval(stepInterval);
       }
 
-      // Use AI-detected category if user hasn't selected one
       if (!category && analysisResult.category !== "Unknown") {
         setCategory(analysisResult.category);
       }
@@ -226,11 +245,26 @@ export const UploadModal = ({ open, onClose, session, onUploadComplete, uploadCo
     setIsSaving(true);
 
     try {
+      // Store the full rich analysis as JSON in extracted_text so the detail modal can render it
+      const fullAnalysisJson = JSON.stringify({
+        extracted_text: analysis.extracted_text,
+        hook: analysis.hook,
+        primary_emotion: analysis.primary_emotion,
+        target_audience: analysis.target_audience,
+        marketing_objective: analysis.marketing_objective,
+        formula_name: analysis.formula_name,
+        formula_explanation: analysis.formula_explanation,
+        why_it_works: analysis.why_it_works,
+        weakness: analysis.weakness,
+        how_to_adapt: analysis.how_to_adapt,
+        final_summary: analysis.final_summary,
+      });
+
       const { error } = await supabase.from("swipes").insert({
         user_id: session.user.id,
         image_url: analysis.publicUrl,
         file_path: analysis.filePath,
-        extracted_text: analysis.extracted_text,
+        extracted_text: fullAnalysisJson,
         marketing_formula: analysis.marketing_formula,
         industry: analysis.industry,
         emotional_hook: analysis.emotional_hook,
