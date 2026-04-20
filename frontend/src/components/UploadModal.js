@@ -215,9 +215,14 @@ export const UploadModal = ({ open, onClose, session, onUploadComplete, uploadCo
           final_summary: raw.final_summary || "",
         };
       } catch (err) {
-        console.warn("AI analysis failed:", err.message);
+        // #region agent log
+        const geminiErrDetail = `[Gemini error] ${err?.message || String(err)} | keySet=${!!process.env.REACT_APP_GEMINI_API_KEY}`;
+        console.error(geminiErrDetail);
+        fetch('http://127.0.0.1:7311/ingest/f5827246-f5c5-4bb6-9521-5c6a1f81f80c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c4c027'},body:JSON.stringify({sessionId:'c4c027',location:'UploadModal.js:geminiCatch',message:'Gemini failed',data:{error:err?.message,keySet:!!process.env.REACT_APP_GEMINI_API_KEY},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        toast.warning(`AI analysis failed: ${err?.message || "Unknown error"}`, { duration: 8000 });
         analysisResult = {
-          extracted_text: "AI analysis unavailable",
+          extracted_text: `AI analysis failed: ${err?.message || "Unknown error"}`,
           marketing_formula: "Unknown",
           industry: "Unknown",
           emotional_hook: "Unknown",
