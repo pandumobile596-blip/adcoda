@@ -30,9 +30,8 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import axios from "axios";
+import { analyzeMarketingImage } from "../lib/gemini";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const CATEGORIES = [
   "Social Ad",
   "Email Newsletter",
@@ -179,10 +178,7 @@ export const UploadModal = ({ open, onClose, session, onUploadComplete, uploadCo
 
       let analysisResult = null;
       try {
-        const { data } = await axios.post(`${BACKEND_URL}/api/analyze-image`, {
-          image_url: publicUrl,
-        });
-        analysisResult = data;
+        analysisResult = await analyzeMarketingImage(publicUrl);
       } catch (err) {
         console.warn("AI analysis failed, using defaults:", err.message);
         analysisResult = {
