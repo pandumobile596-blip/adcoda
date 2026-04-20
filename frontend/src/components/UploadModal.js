@@ -146,23 +146,38 @@ export const UploadModal = ({ open, onClose, session, onUploadComplete, uploadCo
     setUploadProgress(0);
     setErrorMsg("");
 
+    // #region agent log
+    const _dbgUpload = (msg, data) => {
+      console.log(`[Upload] ${msg}`, data ?? "");
+      fetch('http://127.0.0.1:7311/ingest/f5827246-f5c5-4bb6-9521-5c6a1f81f80c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c4c027'},body:JSON.stringify({sessionId:'c4c027',location:'UploadModal.js',message:msg,data:data??null,timestamp:Date.now()})}).catch(()=>{});
+    };
+    // #endregion
+
     try {
       // 1. Upload to Supabase Storage
       const ext = file.name.split(".").pop();
       const filePath = `${session.user.id}/${Date.now()}.${ext}`;
+
+      // #region agent log
+      _dbgUpload('Starting Supabase upload', { filePath, fileSize: file.size, fileType: file.type, userId: session.user.id });
+      // #endregion
 
       // Simulate upload progress
       const progressInterval = setInterval(() => {
         setUploadProgress((p) => Math.min(p + 15, 85));
       }, 200);
 
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from("swipes")
         .upload(filePath, file, { cacheControl: "3600", upsert: false });
 
       clearInterval(progressInterval);
 
-      if (uploadError) throw new Error(uploadError.message);
+      // #region agent log
+      _dbgUpload('Supabase upload result', { error: uploadError ? { message: uploadError.message, status: uploadError.status, statusCode: uploadError.statusCode, error: uploadError.error } : null, data: uploadData ?? null });
+      // #endregion
+
+      if (uploadError) throw new Error(`[Storage] ${uploadError.message} (status: ${uploadError.statusCode ?? uploadError.status ?? 'unknown'})`);
 
       setUploadProgress(100);
 

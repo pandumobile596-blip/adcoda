@@ -49,13 +49,41 @@ async function fetchImageAsBase64(imageUrl) {
  * @returns {Promise<Object>} - { extracted_text, marketing_formula, industry, emotional_hook, category }
  */
 export async function analyzeMarketingImage(imageUrl) {
+  // #region agent log
+  const _dbg = (msg, data) => {
+    console.log(`[Gemini] ${msg}`, data ?? "");
+    fetch('http://127.0.0.1:7311/ingest/f5827246-f5c5-4bb6-9521-5c6a1f81f80c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c4c027'},body:JSON.stringify({sessionId:'c4c027',location:'gemini.js',message:msg,data:data??null,timestamp:Date.now()})}).catch(()=>{});
+  };
+  // #endregion
+
+  // #region agent log
+  _dbg('analyzeMarketingImage called', { imageUrl, hasApiKey: !!GEMINI_API_KEY, keyPrefix: GEMINI_API_KEY ? GEMINI_API_KEY.slice(0,8)+'...' : 'MISSING' });
+  // #endregion
+
   if (!GEMINI_API_KEY) {
+    // #region agent log
+    _dbg('ERROR: API key missing');
+    // #endregion
     throw new Error(
       "Gemini API key not configured. Add REACT_APP_GEMINI_API_KEY to your Vercel environment variables."
     );
   }
 
-  const { base64, mimeType } = await fetchImageAsBase64(imageUrl);
+  // #region agent log
+  _dbg('Fetching image as base64', { imageUrl });
+  // #endregion
+  let base64, mimeType;
+  try {
+    ({ base64, mimeType } = await fetchImageAsBase64(imageUrl));
+    // #region agent log
+    _dbg('Image fetched OK', { mimeType, base64Length: base64?.length });
+    // #endregion
+  } catch (fetchErr) {
+    // #region agent log
+    _dbg('ERROR fetching image', { error: fetchErr.message });
+    // #endregion
+    throw fetchErr;
+  }
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -64,6 +92,9 @@ export async function analyzeMarketingImage(imageUrl) {
 
   for (const modelName of modelsToTry) {
     try {
+      // #region agent log
+      _dbg('Trying model', { modelName });
+      // #endregion
       const model = genAI.getGenerativeModel({ model: modelName });
       const result = await model.generateContent([
         { inlineData: { data: base64, mimeType } },
@@ -71,6 +102,9 @@ export async function analyzeMarketingImage(imageUrl) {
       ]);
 
       let text = result.response.text().trim();
+      // #region agent log
+      _dbg('Gemini responded', { modelName, textSnippet: text.slice(0, 120) });
+      // #endregion
 
       // Strip markdown code fences if present
       if (text.includes("```")) {
@@ -84,10 +118,16 @@ export async function analyzeMarketingImage(imageUrl) {
         }
       }
 
-      return JSON.parse(text);
+      const parsed = JSON.parse(text);
+      // #region agent log
+      _dbg('Parse OK', parsed);
+      // #endregion
+      return parsed;
     } catch (err) {
+      // #region agent log
+      _dbg('Model failed', { modelName, error: err.message });
+      // #endregion
       lastError = err;
-      // Try next model
     }
   }
 
